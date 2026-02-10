@@ -19,10 +19,7 @@ Boost your flight speed up to `20x` with a clean in-game UI, Hold/Toggle activat
 Survival boost can trigger anti-cheat checks on servers.
 Use survival mode only on servers you own or trust.
 
-## Screenshots
-Replace the placeholder URLs below with your uploaded Modrinth image links.
-
-(put images here)
+![Flyspeed Settings GUI](https://cdn.modrinth.com/data/cached_images/1103c5ae5ed848fe2f2523e73c492ef468e42b77.png)
 
 ## How To Use
 1. Start flying in creative mode (or survival flight if enabled in settings).
