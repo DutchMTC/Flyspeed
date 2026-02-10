@@ -1,0 +1,32 @@
+{
+	"key.category.flyspeed.controls": "Flyspeed",
+	"key.flyspeed.open_settings": "Open Flyspeed Settings",
+	"key.flyspeed.toggle_survival_boost": "Toggle Survival Flight Boost",
+
+	"hud.flyspeed.active": "Flyspeed x%s",
+
+	"message.flyspeed.survival_enabled": "Flyspeed: Survival flight boost enabled.",
+	"message.flyspeed.survival_disabled": "Flyspeed: Survival flight boost disabled.",
+
+	"screen.flyspeed.settings.title": "Flyspeed Settings",
+	"screen.flyspeed.settings.subtitle": "Hold your sprint key while flying to boost speed.",
+	"screen.flyspeed.settings.multiplier": "Flight Multiplier: x%s",
+	"screen.flyspeed.settings.survival_toggle": "Allow Survival Flight Boost: %s",
+	"screen.flyspeed.settings.hud_toggle": "HUD Indicator: %s",
+	"screen.flyspeed.settings.activation_mode": "Activation Mode: %s",
+	"screen.flyspeed.settings.mode.hold": "Hold",
+	"screen.flyspeed.settings.mode.toggle": "Toggle",
+	"screen.flyspeed.settings.reset": "Reset Defaults",
+	"screen.flyspeed.settings.tip": "Survival boost may trigger anti-cheat checks on servers you do not own.",
+	"screen.flyspeed.settings.state.enabled": "Enabled",
+	"screen.flyspeed.settings.state.disabled": "Disabled",
+	"screen.flyspeed.settings.state.on": "On",
+	"screen.flyspeed.settings.state.off": "Off",
+
+	"screen.flyspeed.warning.title": "Survival Boost Warning",
+	"screen.flyspeed.warning.line1": "Only use survival flight boost on servers you own or trust.",
+	"screen.flyspeed.warning.line2": "Many anti-cheat plugins treat high fly speed as cheating.",
+	"screen.flyspeed.warning.line3": "You can be kicked or banned on other servers.",
+	"screen.flyspeed.warning.enable": "I Understand, Enable It",
+	"screen.flyspeed.warning.cancel": "Cancel"
+}

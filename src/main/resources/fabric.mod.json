@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "flyspeed",
+	"version": "${version}",
+	"name": "Flyspeed",
+	"description": "Boost creative flight speed up to 20x while holding sprint, with optional survival-flight support.",
+	"authors": [
+		"Miyaki"
+	],
+	"contact": {
+		"sources": "https://github.com/miyaki/flyspeed"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/flyspeed/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.miyaki.Flyspeed"
+		],
+		"client": [
+			"com.miyaki.FlyspeedClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.18.4",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
