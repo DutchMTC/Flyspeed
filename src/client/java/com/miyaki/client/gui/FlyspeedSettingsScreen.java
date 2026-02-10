@@ -3,6 +3,7 @@ package com.miyaki.client.gui;
 import com.miyaki.FlyspeedClient;
 import com.miyaki.client.FlightSpeedController;
 import com.miyaki.client.FlyspeedConfig;
+import com.miyaki.client.ServerPolicyState;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
@@ -32,27 +33,27 @@ public final class FlyspeedSettingsScreen extends Screen {
 		int left = (this.width - panelWidth) / 2;
 		int top = (this.height - panelHeight) / 2;
 
-		this.multiplierSlider = this.addRenderableWidget(new MultiplierSlider(left + 20, top + 46, panelWidth - 40, 20));
+		this.multiplierSlider = this.addRenderableWidget(new MultiplierSlider(left + 20, top + 58, panelWidth - 40, 20));
 
 		this.survivalToggleButton = this.addRenderableWidget(Button.builder(
 			Component.empty(),
 			button -> toggleSurvivalMode()
-		).bounds(left + 20, top + 74, panelWidth - 40, 20).build());
+		).bounds(left + 20, top + 86, panelWidth - 40, 20).build());
 
 		this.hudToggleButton = this.addRenderableWidget(Button.builder(
 			Component.empty(),
 			button -> toggleHud()
-		).bounds(left + 20, top + 98, panelWidth - 40, 20).build());
+		).bounds(left + 20, top + 110, panelWidth - 40, 20).build());
 
 		this.activationModeButton = this.addRenderableWidget(Button.builder(
 			Component.empty(),
 			button -> toggleActivationMode()
-		).bounds(left + 20, top + 124, (panelWidth - 48) / 2, 20).build());
+		).bounds(left + 20, top + 136, (panelWidth - 48) / 2, 20).build());
 
 		this.addRenderableWidget(Button.builder(
 			Component.translatable("screen.flyspeed.settings.reset"),
 			button -> resetToDefaults()
-		).bounds(left + 28 + (panelWidth - 48) / 2, top + 124, (panelWidth - 48) / 2, 20).build());
+		).bounds(left + 28 + (panelWidth - 48) / 2, top + 136, (panelWidth - 48) / 2, 20).build());
 
 		this.addRenderableWidget(Button.builder(
 			Component.translatable("gui.done"),
@@ -74,6 +75,7 @@ public final class FlyspeedSettingsScreen extends Screen {
 
 		guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, top + 10, 0xFFFFFFFF);
 		guiGraphics.drawCenteredString(this.font, Component.translatable("screen.flyspeed.settings.subtitle"), this.width / 2, top + 24, 0xFFCAEFFC);
+		guiGraphics.drawCenteredString(this.font, serverPolicyLine(), this.width / 2, top + 38, 0xFFA9E8FF);
 		guiGraphics.drawWordWrap(
 			this.font,
 			Component.translatable("screen.flyspeed.settings.tip"),
@@ -178,6 +180,19 @@ public final class FlyspeedSettingsScreen extends Screen {
 
 		FlyspeedClient.saveConfig();
 		this.dirty = false;
+	}
+
+	private Component serverPolicyLine() {
+		Component state = switch (ServerPolicyState.getStatus()) {
+			case UNKNOWN -> Component.translatable("screen.flyspeed.settings.server_policy.waiting");
+			case ALLOWED -> Component.translatable(
+				"screen.flyspeed.settings.server_policy.allowed",
+				FlightSpeedController.formatMultiplier(ServerPolicyState.getEffectiveMaxMultiplier())
+			);
+			case DISABLED -> Component.translatable("screen.flyspeed.settings.server_policy.disabled");
+		};
+
+		return Component.translatable("screen.flyspeed.settings.server_policy", state);
 	}
 
 	private int panelWidth() {

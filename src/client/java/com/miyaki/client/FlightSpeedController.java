@@ -1,5 +1,6 @@
 package com.miyaki.client;
 
+import com.miyaki.FlyspeedClient;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.Minecraft;
@@ -22,6 +23,7 @@ public final class FlightSpeedController {
 	private boolean sprintWasDown = false;
 	private boolean toggleActive = false;
 	private boolean restoreSprintState = false;
+	private long nextPolicyMessageAtMs = 0L;
 
 	public void tick(Minecraft client, FlyspeedConfig config) {
 		boolean sprintDown = isSprintKeyPhysicallyDown(client);
@@ -35,6 +37,8 @@ public final class FlightSpeedController {
 
 		Abilities abilities = player.getAbilities();
 		boolean canUseFlightBoost = abilities.flying && !player.isSpectator() && (abilities.instabuild || config.enableSurvivalFlightBoost);
+		boolean serverAllowsBoost = ServerPolicyState.allowsBoost();
+		float effectiveMultiplier = Math.min(config.multiplier, ServerPolicyState.getEffectiveMaxMultiplier());
 		switch (config.activationMode) {
 			case HOLD -> toggleActive = false;
 			case TOGGLE -> {
@@ -53,7 +57,10 @@ public final class FlightSpeedController {
 			case TOGGLE -> toggleActive;
 			case ALWAYS -> true;
 		};
-		boolean shouldBoost = canUseFlightBoost && activationRequested && config.multiplier > FlyspeedConfig.MIN_MULTIPLIER;
+		boolean shouldBoost = canUseFlightBoost
+			&& serverAllowsBoost
+			&& activationRequested
+			&& effectiveMultiplier > FlyspeedConfig.MIN_MULTIPLIER;
 
 		if (!shouldBoost) {
 			if (boosted) {
@@ -62,7 +69,11 @@ public final class FlightSpeedController {
 				normalFlySpeed = abilities.getFlyingSpeed();
 			}
 
-			animateHud(false, config.multiplier);
+			if (!serverAllowsBoost && canUseFlightBoost && shouldNotifyBlockedPolicy(config, sprintDown)) {
+				notifyServerPolicyBlocked(client);
+			}
+
+			animateHud(false, effectiveMultiplier);
 			sprintWasDown = sprintDown;
 			return;
 		}
@@ -72,14 +83,14 @@ public final class FlightSpeedController {
 			restoreSprintState = player.isSprinting();
 		}
 
-		float boostedSpeed = Math.min(MAX_FLY_SPEED, normalFlySpeed * config.multiplier);
+		float boostedSpeed = Math.min(MAX_FLY_SPEED, normalFlySpeed * effectiveMultiplier);
 		if (Math.abs(abilities.getFlyingSpeed() - boostedSpeed) > 0.0001f) {
 			abilities.setFlyingSpeed(boostedSpeed);
 		}
 
 		boosted = true;
-		displayedMultiplier = config.multiplier;
-		animateHud(config.showHudIndicator, config.multiplier);
+		displayedMultiplier = effectiveMultiplier;
+		animateHud(config.showHudIndicator, effectiveMultiplier);
 		if (restoreSprintState && !player.isSprinting()) {
 			player.setSprinting(true);
 		}
@@ -116,12 +127,34 @@ public final class FlightSpeedController {
 		sprintWasDown = false;
 		toggleActive = false;
 		restoreSprintState = false;
+		nextPolicyMessageAtMs = 0L;
 	}
 
 	private void animateHud(boolean shouldShow, float multiplier) {
 		float targetAlpha = shouldShow ? 1.0f : 0.0f;
 		hudAlpha += (targetAlpha - hudAlpha) * 0.2f;
 		displayedMultiplier = multiplier;
+	}
+
+	private boolean shouldNotifyBlockedPolicy(FlyspeedConfig config, boolean sprintDown) {
+		return switch (config.activationMode) {
+			case HOLD -> sprintDown;
+			case TOGGLE -> sprintDown || toggleActive;
+			case ALWAYS -> false;
+		};
+	}
+
+	private void notifyServerPolicyBlocked(Minecraft client) {
+		long now = System.currentTimeMillis();
+		if (now < nextPolicyMessageAtMs) {
+			return;
+		}
+
+		nextPolicyMessageAtMs = now + 2500L;
+		Component message = ServerPolicyState.isWaitingForServerPolicy()
+			? Component.translatable("message.flyspeed.server_policy_waiting")
+			: Component.translatable("message.flyspeed.server_policy_disabled");
+		FlyspeedClient.sendActionBar(client, message);
 	}
 
 	private boolean isSprintKeyPhysicallyDown(Minecraft client) {

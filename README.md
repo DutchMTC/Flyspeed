@@ -15,10 +15,6 @@ Boost your flight speed up to `20x` with a clean in-game UI, Hold/Toggle activat
 - `Open Flyspeed Settings`: `F8` (default, rebindable)
 - `Toggle Survival Flight Boost`: unbound by default (rebindable)
 
-## Safety
-Survival boost can trigger anti-cheat checks on servers.
-Use survival mode only on servers you own or trust.
-
 ![Flyspeed Settings GUI](https://cdn.modrinth.com/data/cached_images/1103c5ae5ed848fe2f2523e73c492ef468e42b77.png)
 
 ## How To Use
@@ -28,3 +24,20 @@ Use survival mode only on servers you own or trust.
    Toggle mode: press sprint once to turn boost on, press again to turn it off.
    Always mode: boost is active any time you are flying.
 3. Open settings with `F8` to adjust multiplier, mode, and toggles.
+
+## Server Policy (Opt-In + Limit)
+Flyspeed uses a server policy handshake for multiplayer:
+- If a server has Flyspeed installed, it can allow/disable boost and set a max multiplier.
+
+Server owners can edit `config/flyspeed-server.json`:
+
+```json
+{
+  "allowMovementBoost": true,
+  "maxMultiplier": 20.0
+}
+```
+
+- Set `"allowMovementBoost": false` to disable boost entirely.
+- Set `"maxMultiplier"` to cap client boost (range `1.0` to `20.0`).
+- Restart server after editing.

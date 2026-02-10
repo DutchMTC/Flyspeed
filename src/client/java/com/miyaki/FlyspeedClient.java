@@ -1,6 +1,8 @@
 package com.miyaki;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
@@ -13,8 +15,10 @@ import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 import com.miyaki.client.FlightSpeedController;
 import com.miyaki.client.FlyspeedConfig;
+import com.miyaki.client.ServerPolicyState;
 import com.miyaki.client.gui.FlyspeedSettingsScreen;
 import com.miyaki.client.gui.SurvivalWarningScreen;
+import com.miyaki.network.ServerPolicyPayload;
 
 public class FlyspeedClient implements ClientModInitializer {
 	private static final FlightSpeedController CONTROLLER = new FlightSpeedController();
@@ -26,6 +30,12 @@ public class FlyspeedClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> ServerPolicyState.onJoin(client));
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ServerPolicyState.onDisconnect());
+		ClientPlayNetworking.registerGlobalReceiver(ServerPolicyPayload.TYPE, (payload, context) -> {
+			ServerPolicyState.applyPolicy(payload);
+		});
+
 		openSettingsKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.flyspeed.open_settings",
 			InputConstants.Type.KEYSYM,
