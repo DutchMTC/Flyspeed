@@ -21,6 +21,7 @@ public final class FlightSpeedController {
 	private boolean boosted = false;
 	private boolean sprintWasDown = false;
 	private boolean toggleActive = false;
+	private boolean restoreSprintState = false;
 
 	public void tick(Minecraft client, FlyspeedConfig config) {
 		boolean sprintDown = isSprintKeyPhysicallyDown(client);
@@ -34,24 +35,29 @@ public final class FlightSpeedController {
 
 		Abilities abilities = player.getAbilities();
 		boolean canUseFlightBoost = abilities.flying && !player.isSpectator() && (abilities.instabuild || config.enableSurvivalFlightBoost);
-		if (!config.toggleActivationMode) {
-			toggleActive = false;
-		} else {
-			if (canUseFlightBoost && client.screen == null && sprintDown && !sprintWasDown) {
-				toggleActive = !toggleActive;
-			}
-
-			if (!canUseFlightBoost) {
-				toggleActive = false;
+		switch (config.activationMode) {
+			case HOLD -> toggleActive = false;
+			case TOGGLE -> {
+				if (canUseFlightBoost && client.screen == null && sprintDown && !sprintWasDown) {
+					toggleActive = !toggleActive;
+				}
 			}
 		}
 
-		boolean activationRequested = config.toggleActivationMode ? toggleActive : sprintDown;
+		if (!canUseFlightBoost) {
+			toggleActive = false;
+		}
+
+		boolean activationRequested = switch (config.activationMode) {
+			case HOLD -> sprintDown;
+			case TOGGLE -> toggleActive;
+			case ALWAYS -> true;
+		};
 		boolean shouldBoost = canUseFlightBoost && activationRequested && config.multiplier > FlyspeedConfig.MIN_MULTIPLIER;
 
 		if (!shouldBoost) {
 			if (boosted) {
-				restoreNormalFlySpeed(abilities);
+				restoreNormalState(player, abilities);
 			} else {
 				normalFlySpeed = abilities.getFlyingSpeed();
 			}
@@ -63,6 +69,7 @@ public final class FlightSpeedController {
 
 		if (!boosted) {
 			normalFlySpeed = abilities.getFlyingSpeed();
+			restoreSprintState = player.isSprinting();
 		}
 
 		float boostedSpeed = Math.min(MAX_FLY_SPEED, normalFlySpeed * config.multiplier);
@@ -73,6 +80,9 @@ public final class FlightSpeedController {
 		boosted = true;
 		displayedMultiplier = config.multiplier;
 		animateHud(config.showHudIndicator, config.multiplier);
+		if (restoreSprintState && !player.isSprinting()) {
+			player.setSprinting(true);
+		}
 		sprintWasDown = sprintDown;
 	}
 
@@ -91,9 +101,13 @@ public final class FlightSpeedController {
 		guiGraphics.drawString(client.font, label, x, y, color, true);
 	}
 
-	private void restoreNormalFlySpeed(Abilities abilities) {
+	private void restoreNormalState(LocalPlayer player, Abilities abilities) {
 		abilities.setFlyingSpeed(normalFlySpeed);
 		boosted = false;
+		if (restoreSprintState && !player.isSprinting()) {
+			player.setSprinting(true);
+		}
+		restoreSprintState = false;
 	}
 
 	private void clearTransientState() {
@@ -101,6 +115,7 @@ public final class FlightSpeedController {
 		normalFlySpeed = DEFAULT_FLY_SPEED;
 		sprintWasDown = false;
 		toggleActive = false;
+		restoreSprintState = false;
 	}
 
 	private void animateHud(boolean shouldShow, float multiplier) {

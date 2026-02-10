@@ -5,7 +5,7 @@ Boost your flight speed up to `20x` with a clean in-game UI, Hold/Toggle activat
 ## Highlights
 - Flight speed multiplier from `1x` to `20x`
 - Works instantly while flying, restores normal speed automatically
-- Activation mode: `Hold` or `Toggle`
+- Activation mode: `Hold`, `Toggle`, or `Always`
 - Optional survival flight support (disabled by default)
 - Built-in safety warning before enabling survival boost
 - HUD indicator when boost is active
@@ -26,4 +26,5 @@ Use survival mode only on servers you own or trust.
 2. Activate boost with your selected mode:
    Hold mode: hold sprint.
    Toggle mode: press sprint once to turn boost on, press again to turn it off.
+   Always mode: boost is active any time you are flying.
 3. Open settings with `F8` to adjust multiplier, mode, and toggles.

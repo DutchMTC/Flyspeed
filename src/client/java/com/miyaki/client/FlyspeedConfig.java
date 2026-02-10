@@ -2,7 +2,9 @@ package com.miyaki.client;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import com.miyaki.Flyspeed;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -13,6 +15,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class FlyspeedConfig {
+	public enum ActivationMode {
+		HOLD,
+		TOGGLE,
+		ALWAYS
+	}
+
 	public static final float MIN_MULTIPLIER = 1.0f;
 	public static final float MAX_MULTIPLIER = 20.0f;
 	private static final float DEFAULT_MULTIPLIER = 6.0f;
@@ -24,7 +32,7 @@ public final class FlyspeedConfig {
 	public boolean enableSurvivalFlightBoost = false;
 	public boolean showHudIndicator = true;
 	public boolean warningAcknowledged = false;
-	public boolean toggleActivationMode = false;
+	public ActivationMode activationMode = ActivationMode.HOLD;
 
 	public static FlyspeedConfig load() {
 		if (!Files.exists(CONFIG_PATH)) {
@@ -34,12 +42,18 @@ public final class FlyspeedConfig {
 		}
 
 		try (Reader reader = Files.newBufferedReader(CONFIG_PATH)) {
-			FlyspeedConfig loaded = GSON.fromJson(reader, FlyspeedConfig.class);
+			JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+			FlyspeedConfig loaded = GSON.fromJson(root, FlyspeedConfig.class);
 			if (loaded == null) {
 				throw new JsonParseException("Config content was empty");
 			}
 
-			loaded.multiplier = clampMultiplier(loaded.multiplier);
+			// Migrate legacy configs that stored boolean toggleActivationMode.
+			if (!root.has("activationMode") && root.has("toggleActivationMode") && root.get("toggleActivationMode").getAsBoolean()) {
+				loaded.activationMode = ActivationMode.TOGGLE;
+			}
+
+			loaded.normalize();
 			return loaded;
 		} catch (IOException | JsonParseException exception) {
 			Flyspeed.LOGGER.warn("Failed to load Flyspeed config at {}. Reverting to defaults.", CONFIG_PATH, exception);
@@ -58,18 +72,33 @@ public final class FlyspeedConfig {
 		this.enableSurvivalFlightBoost = false;
 		this.showHudIndicator = true;
 		this.warningAcknowledged = false;
-		this.toggleActivationMode = false;
+		this.activationMode = ActivationMode.HOLD;
 	}
 
 	public void save() {
 		try {
-			this.multiplier = clampMultiplier(this.multiplier);
+			normalize();
 			Files.createDirectories(CONFIG_PATH.getParent());
 			try (Writer writer = Files.newBufferedWriter(CONFIG_PATH)) {
 				GSON.toJson(this, writer);
 			}
 		} catch (IOException exception) {
 			Flyspeed.LOGGER.error("Failed to save Flyspeed config at {}", CONFIG_PATH, exception);
+		}
+	}
+
+	public void cycleActivationMode() {
+		this.activationMode = switch (this.activationMode) {
+			case HOLD -> ActivationMode.TOGGLE;
+			case TOGGLE -> ActivationMode.ALWAYS;
+			case ALWAYS -> ActivationMode.HOLD;
+		};
+	}
+
+	private void normalize() {
+		this.multiplier = clampMultiplier(this.multiplier);
+		if (this.activationMode == null) {
+			this.activationMode = ActivationMode.HOLD;
 		}
 	}
 }

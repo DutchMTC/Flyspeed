@@ -135,7 +135,7 @@ public final class FlyspeedSettingsScreen extends Screen {
 	}
 
 	private void toggleActivationMode() {
-		this.config.toggleActivationMode = !this.config.toggleActivationMode;
+		this.config.cycleActivationMode();
 		markDirty();
 		refreshLabels();
 	}
@@ -159,9 +159,11 @@ public final class FlyspeedSettingsScreen extends Screen {
 		this.hudToggleButton.setMessage(Component.translatable("screen.flyspeed.settings.hud_toggle", hudState));
 		this.activationModeButton.setMessage(Component.translatable(
 			"screen.flyspeed.settings.activation_mode",
-			this.config.toggleActivationMode
-				? Component.translatable("screen.flyspeed.settings.mode.toggle")
-				: Component.translatable("screen.flyspeed.settings.mode.hold")
+			switch (this.config.activationMode) {
+				case HOLD -> Component.translatable("screen.flyspeed.settings.mode.hold");
+				case TOGGLE -> Component.translatable("screen.flyspeed.settings.mode.toggle");
+				case ALWAYS -> Component.translatable("screen.flyspeed.settings.mode.always");
+			}
 		));
 	}
 
